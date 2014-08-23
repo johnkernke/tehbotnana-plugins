@@ -1,0 +1,18 @@
+{
+    "name": "tehbotnana-plugins",
+    "private": true,
+    "description": "Plugins for tehbotnana",
+    "version": "0.0.1",
+    "author": {
+        "name": "John Kernke",
+        "email": "john.kernke@gmail.com"
+    },
+    "main": "./index.js",
+    "dependencies": {
+        "html-entities": "~1.0.10",
+        "logger": "johnkernke/logger",
+        "ntwitter": "~0.5.0",
+        "request": "~2.40.0",
+        "tldjs": "~1.5.0"
+    }
+}
