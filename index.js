@@ -1,14 +1,15 @@
 var fs = require('fs');
 
 function load() {
-    fs.readdir('./plugins/', function (err, files) {
+    var dir = __dirname + '/plugins/';
+    fs.readdir(dir, function (err, files) {
         if (err) {
             throw err;
         }
 
         files.map(function (file) {
-            if (fs.lstatSync('./plugins/' + file).isDirectory() && fs.lstatSync('./plugins/' + file + '/index.js').isFile()) {
-                new (require('./plugins/' + file))();
+            if (fs.lstatSync(dir + file).isDirectory() && fs.lstatSync(dir + file + '/index.js').isFile()) {
+                new (require(dir + file))();
             }
         });
     });
