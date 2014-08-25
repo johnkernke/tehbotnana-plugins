@@ -7,12 +7,14 @@ function github() {
     var self = this;
     self.channels = {};
     self.cache = {};
+    self.repos = {};
+    self.users = {};
 
     self.init = function () {
-        for (channel in self.channels) {
-            var _channel = self.channels[channel];
+        for (var i in self.channels) {
+            var channel = self.channels[i];
 
-            _channel.repos.map(function (repo) {
+            channel.repos.map(function (repo) {
                 var _repo = repo.split('/');
                 githubapi.events.getFromRepo({
                     user: _repo[0],
@@ -20,7 +22,7 @@ function github() {
                 }, self.handleRepo);
             });
 
-            _channel.users.map(function (user) {
+            channel.users.map(function (user) {
                 
             });
         }
@@ -46,15 +48,45 @@ function github() {
         if (true||self.cache[repo].lastModified.getTime > new Date(Date.parse(res.meta['last-modified'])).getTime()) {
             var events = [];
             res.map(function (event) {
-                if (event.id > self.cache[repo].lastId) {
+                // if (event.id > self.cache[repo].lastId) {
                     events.push(event);
-                }
+                // }
             });
 
-            events.reverse();
+            for (var i in events) {
+                var event = events[i],
+                    msg = '[GH ' + repo;
 
-            for (event in events) {
-                // app.irc.sendMessage()
+                // @todo add checking of config if event type is enabled
+                if (event.type == 'PushEvent') {
+                    var branch = event.payload.ref.split('/');
+                    msg += '@' + branch[branch.length - 1] + ' Push] ';
+                    msg += event.actor.login + ': ' + event.payload.commits[0].message.split(/\r?\n/)[0];
+                    msg += ' https://github.com/' + repo + '/commit/' + event.payload.head.substr(0, 10);
+                } else if (event.type == 'IssuesEvent') {
+                    msg += ' Issue ' + capitaliseFirstLetter(event.payload.action) + '] ';
+                    msg += event.actor.login + ': ' + event.payload.issue.title;
+                    msg += ' ' + event.payload.issue.html_url;
+                } else if (event.type == 'IssueCommentEvent') {
+                    msg += ' Issue Comment] ';
+                    msg += event.actor.login + ': ' + event.payload.issue.title;
+                    msg += ' ' + event.payload.issue.html_url;
+                } else if (event.type == 'PullRequestEvent') {
+                    logger.debug('PullRequestEvent');
+                } else if (event.type == 'ForkEvent') {
+                    logger.debug('ForkEvent');
+                } else if (event.type == 'WatchEvent') {
+                    logger.debug('WatchEvent');
+                } else if (event.type == 'FollowEvent') { // check me
+                    logger.debug('FollowEvent');
+                } else {
+                    logger.debug(repo + ' not notifying of event: ' + event.type);
+                    continue;
+                }
+
+                for (var i in self.repos[repo]) {
+                    app.irc.sendMessage(self.repos[repo][i], msg);
+                }
             }
         }
     };
@@ -64,11 +96,12 @@ function github() {
     };
 
     var channel_list = [];
-    for (channel in app.config.channels) {
+    for (var channel in app.config.channels) {
+        var channel = channel.toLowerCase();
         if (app.config.channels[channel].github !== undefined) {
             var _cfg = app.config.channels[channel].github;
-            channel_list.push(channel.toLowerCase());
-            self.channels[channel.toLowerCase()] = {
+            channel_list.push(channel);
+            self.channels[channel] = {
                 alerts: {
                     commit: _cfg.alerts.commit || false,
                     issue: _cfg.alerts.issue || false,
@@ -81,6 +114,34 @@ function github() {
                 repos: _cfg.repos || [],
                 users: _cfg.users || []
             };
+
+            for (var i in self.channels[channel].repos) {
+                var repo = self.channels[channel].repos[i];
+                if (self.repos[repo] === undefined) {
+                    self.repos[repo] = [channel];
+                    continue;
+                }
+
+                if (self.repos[repo].indexOf(channel) > -1) {
+                    continue;
+                }
+
+                self.repos[repo].push(channel);
+            }
+
+            for (var i in self.channels[channel].users) {
+                var user = self.channels[channel].users[i];
+                if (self.users[user] === undefined) {
+                    self.users[user] = [channel];
+                    continue;
+                }
+
+                if (self.users[user].indexOf(channel) > -1) {
+                    continue;
+                }
+
+                self.users[user].push(channel);
+            }
         }
     }
 
@@ -88,4 +149,10 @@ function github() {
     delete channel_list;
 
     self.init();
+}
+
+// source: http://stackoverflow.com/a/1026087
+// @todo find a nicer home for this
+function capitaliseFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
 }
