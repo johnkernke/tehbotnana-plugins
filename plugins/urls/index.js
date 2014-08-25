@@ -104,7 +104,7 @@ function urls() {
 
             var r = request(uri, function (error, res, body) {
                 if (error) {
-                    logger.notice('Error getting page (' + uri + '). ' + error);
+                    logger.error('Error getting page (' + uri + '). ' + error);
                     titles[uri] = null;
                 } else {
                     if (!/text\/html/i.test(res.headers['content-type'])) {
