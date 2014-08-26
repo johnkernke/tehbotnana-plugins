@@ -133,7 +133,7 @@ function urls() {
             var buffer = 0;
             r.on('data', function (chunk) {
                 buffer += chunk;
-                if (buffer.length > (50 * 1024)) { // 50kb
+                if (buffer.length > (250 * 1024)) { // 250kb
                     r.abort();
                     r.emit('error', new Error('Maximum file size reached'));
                 }
