@@ -1,5 +1,6 @@
 var logger = new (require('logger'))(app.config.log, 'URLs'),
     request = require('request'),
+    entities = new (require('html-entities').AllHtmlEntities),
     url = require('url'),
     tld = require('tldjs');
 
@@ -142,6 +143,7 @@ function urls() {
 
     self.makeTitle = function (title, uri) {
         uri = url.parse(uri);
+        title = entities.decode(title);
         if (uri.host == 'www.youtube.com' && uri.pathname == '/watch') {
             // make pretty text for YouTube
             title = title.replace(' - YouTube', '');
