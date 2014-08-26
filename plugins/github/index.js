@@ -1,9 +1,9 @@
 var logger = new (require('logger'))(app.config.log, 'GitHub'),
     githubapi = new (require('github'))({version:'3.0.0'});
 
-module.exports = gh;
+module.exports = github;
 
-function gh() {
+function github() {
     var self = this;
     self.channels = {};
     self.cache = {};
