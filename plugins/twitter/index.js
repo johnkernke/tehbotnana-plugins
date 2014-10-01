@@ -2,6 +2,8 @@ var ntwitter = new (require('ntwitter'))(app.config.twitter),
     entities = new (require('html-entities').AllHtmlEntities),
     logger = new (require('logger'))(app.config.log, 'Twitter');
 
+var util = require('util');
+
 module.exports = irc_twitter;
 
 function irc_twitter() {
@@ -122,7 +124,9 @@ function irc_twitter() {
             self.stream = undefined;
         }
 
-        self.stream = ntwitter.stream('statuses/filter', {'follow': accounts.join(',')}, function (stream) {
+        ntwitter.stream('statuses/filter', {'follow': accounts.join(',')}, function (stream) {
+            logger.notice('Starting stream');
+            self.stream = stream;
 
             // handle events
             stream.on('data', self.streamOnData);
@@ -222,6 +226,10 @@ function irc_twitter() {
     };
 
     self.streamRestart = function (method, response, status) {
+        if (typeof response == 'object') {
+          response = '[stream object]';
+        }
+
         logger.notice(method + ' > ' + response + (status !== undefined ? ' (' + status + ')' : ''));
 
         if (method === 'end' && status == 420) {
